@@ -1,0 +1,44 @@
+# Charge Burst
+
+> Hold to charge, release to detonate. Full in two seconds: screen shake, hit-stop, sub-bass and a screen full of sparks. A tiny stress-relief toy, no sign-up.
+
+Charge Burst (蓄力核爆 (zh-CN), Carga Explosiva (es), Charge Explosive (fr), チャージバースト (ja)) is a free browser toy at https://charge.integ.life/ by Integ Life. It opens straight into play: no sign-up, no download, no ads, no tutorial. It works with a mouse or a touchscreen on phones, tablets and computers.
+
+## How to play
+
+1. Press and hold anywhere on the screen. The energy core in the middle starts charging, pulls in the particles around it, shakes harder and harder and the screen edges turn red.
+2. Release to detonate. The longer you hold, the bigger the blast. At full charge (about 2.2 seconds) it goes CRITICAL: a short hit-stop freeze, a white flash, a sub-bass drop, a shockwave and hundreds of coloured sparks.
+3. Tap quickly instead of holding to fire small bursts wherever you tap. Each fast tap plays a higher note, and every 8th tap in a row sets off a bigger chain blast.
+
+## Facts
+
+- URL: https://charge.integ.life/
+- Price: free
+- Platforms: any modern web browser (desktop and mobile)
+- Languages: English, 简体中文 (Simplified Chinese), Español, Français and 日本語 (Japanese), picked from the browser language (default English)
+- Sound: synthesised live with the Web Audio API; vibration on Android
+- Made by: Integ Life (https://integ.life/), first published 2026-11-24
+
+## FAQ
+
+**Is Charge Burst free?**
+Yes. It is free, with no sign-up, no download and no ads. It runs in any modern browser on phones, tablets and computers.
+
+**Does it have sound and vibration?**
+Yes. Every sound is synthesised live in the browser with the Web Audio API, so there are no audio files to load. On Android phones it also vibrates at the big moments; iPhone browsers do not support web vibration.
+
+**Which languages does it support?**
+English, 简体中文 (Simplified Chinese), Español, Français and 日本語 (Japanese). The language is picked automatically from your browser settings; any other language falls back to English.
+
+**Who made it?**
+Integ Life (integ.life). Charge Burst is one of four small stress-relief toys, together with Void Harvest, Glass Smash, Chain Pop. More games are at games.integ.life.
+
+**Is any personal data collected?**
+No account and no personal data. At most, anonymous usage statistics (page views and play counts) are collected.
+
+## Related
+
+- [Void Harvest](https://void.integ.life/): Your cursor is a black hole: swallow a screen full of jittery shapes.
+- [Glass Smash](https://smash.integ.life/): Smash a pane of glass with the word you hate written on it.
+- [Chain Pop](https://pop.integ.life/): Pop neon bubbles, then set off a full-screen chain reaction.
+- [Integ Games](https://games.integ.life/): more browser games
