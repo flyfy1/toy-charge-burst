@@ -1,4 +1,5 @@
 import { audio, pentaFreq, type Riser } from './engine/AudioEngine'
+import { track } from './analytics'
 import { Flash, HitStop, Particles, Shake, haptic, rand, runLoop, setupCanvas } from './engine/juice'
 
 const FULL_TIME = 2.2 // seconds to reach critical
@@ -86,6 +87,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
       ring(x, y, 900, 1.0, 50, hueBase + 120)
       ring(x, y, 2600, 0.5, 14, 60)
       banner = { text: 'CRITICAL!', t: 1, hue: hueBase }
+      track('critical')
     }
     // blast dust outward
     for (const d of dust) {
@@ -122,6 +124,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
       parts.burst(x, y, 260, { speed: 1300, life: 1.1, size: 5 })
       ring(x, y, 1800, 0.6, 18, hue + 90)
       banner = { text: `×${combo} CHAIN`, t: 1, hue }
+      track('tap_chain', { combo })
     }
   }
 
