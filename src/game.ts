@@ -1,5 +1,6 @@
 import { audio, pentaFreq, type Riser } from './engine/AudioEngine'
 import { track } from './analytics'
+import { stats } from './share'
 import { Flash, HitStop, Particles, Shake, haptic, rand, runLoop, setupCanvas } from './engine/juice'
 
 const FULL_TIME = 2.2 // seconds to reach critical
@@ -88,6 +89,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
       ring(x, y, 2600, 0.5, 14, 60)
       banner = { text: 'CRITICAL!', t: 1, hue: hueBase }
       track('critical')
+      stats.n = (stats.n ?? 0) + 1
     }
     // blast dust outward
     for (const d of dust) {
