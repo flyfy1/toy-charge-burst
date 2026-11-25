@@ -1,7 +1,7 @@
 import { audio, pentaFreq, type Riser } from './engine/AudioEngine'
 import { track } from './analytics'
 import { stats } from './share'
-import { chargePfft, locale, t } from './i18n'
+import { list, locale, t } from './i18n'
 import { Shake, haptic, runLoop, setupCanvas } from './engine/juice'
 import { Fish, GULPS, N_SPINES, newPose, poseBald, poseFor, rng, scaleForGulps } from './fish'
 import { Sea } from './scene'
@@ -521,7 +521,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
         blinkQueue = [0.12, 0.42]
         fl.sx = fx
         fl.sy = fy
-        const words = chargePfft()
+        const words = list('charge_pfft')
         floatLine(words[Math.floor(rnd() * words.length)], fx, fy - fish.extent(pose, U).ey - 0.05 * U, 0.9, 0.6 * U, 0.22 * U)
       }
     } else {
