@@ -487,7 +487,10 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
       fy += Math.sin(fl.th) * v * dt
       pose.s = fl.s0 + (0.85 - fl.s0) * (1 - (1 - k) * (1 - k))
       sV = 0
-      const { ex, ey } = fish.extent(pose, U)
+      // the 12 % stretch and the wobble can push past the plain extent
+      const ext = fish.extent(pose, U)
+      const ex = ext.ex * 1.14
+      const ey = ext.ey * 1.14
       const loX = Math.min(ex, w / 2)
       const hiX = Math.max(w - ex, w / 2)
       const loY = Math.min(ey, h / 2)

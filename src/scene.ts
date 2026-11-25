@@ -76,7 +76,7 @@ export class Sea {
 
     // sandy bottom: a low dune, lit along its crest, with grain
     const m = Math.min(w, h)
-    const base = h - Math.max(70, h * 0.1)
+    const base = h - Math.max(56, h * 0.062) // below the hint line (80 px up), so the crest never cuts the text
     this.sandY = base
     const dune = (x: number) => base + Math.sin((x / w) * Math.PI * 1.3 + 0.6) * m * 0.018 + Math.sin((x / w) * Math.PI * 3.1) * m * 0.008
     g.beginPath()
