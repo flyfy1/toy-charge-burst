@@ -2,6 +2,7 @@ import { audio, pentaFreq, type Riser } from './engine/AudioEngine'
 import { track } from './analytics'
 import { stats } from './share'
 import { Flash, HitStop, Particles, Shake, haptic, rand, runLoop, setupCanvas } from './engine/juice'
+import { Fish, newPose, poseBald, poseFor, rng } from './fish'
 
 const FULL_TIME = 2.2 // seconds to reach critical
 const TAP_THRESHOLD = 0.1 // below this charge a release counts as a tap
@@ -13,6 +14,9 @@ interface Dust {
   vy: number
   hue: number
   s: number
+  px: number
+  py: number
+  col: string
 }
 
 interface Ring {
@@ -28,6 +32,15 @@ interface Ring {
 
 export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () => void {
   const { stage, dispose } = setupCanvas(canvas)
+  const q = new URLSearchParams(location.search)
+  const DEV = import.meta.env.DEV
+  const seed = Number(q.get('seed') ?? 1) || 1
+  const rnd = q.has('seed') ? rng(seed) : Math.random
+  const fish = new Fish(seed)
+  const pose = newPose()
+  const fixedC = DEV && q.has('c') ? Math.max(0, Math.min(1, Number(q.get('c')))) : null
+  const fixedPose = DEV ? q.get('pose') : null
+  let frozen = DEV && (fixedC !== null || fixedPose !== null)
   const shake = new Shake(34, 0.06, 1.4)
   const stop = new HitStop()
   const flash = new Flash()
@@ -48,20 +61,80 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
   let time = 0
 
   const cx = () => stage.w / 2
-  const cy = () => stage.h / 2
+  const cy = () => stage.h * 0.48
   const minDim = () => Math.min(stage.w, stage.h)
+  const unit = () => minDim() * 0.105
+
+  // baked sea: vertical gradient plus three faint light shafts from the top
+  let sea: HTMLCanvasElement | null = null
+  let seaKey = ''
+  const bakeSea = () => {
+    const key = `${stage.w}x${stage.h}@${stage.dpr}`
+    if (key === seaKey && sea) return sea
+    seaKey = key
+    const c = sea ?? document.createElement('canvas')
+    c.width = Math.round(stage.w * stage.dpr)
+    c.height = Math.round(stage.h * stage.dpr)
+    const g = c.getContext('2d')!
+    g.setTransform(stage.dpr, 0, 0, stage.dpr, 0, 0)
+    const w = stage.w
+    const h = stage.h
+    const lg = g.createLinearGradient(0, 0, 0, h)
+    lg.addColorStop(0, '#06202E')
+    lg.addColorStop(1, '#020810')
+    g.fillStyle = lg
+    g.fillRect(0, 0, w, h)
+    // shafts on their own layer: soft sides, then faded toward the bottom
+    const L = document.createElement('canvas')
+    L.width = c.width
+    L.height = c.height
+    const l = L.getContext('2d')!
+    l.setTransform(stage.dpr, 0, 0, stage.dpr, 0, 0)
+    const shaft = (x: number, width: number) => {
+      l.save()
+      l.translate(x, -20)
+      l.rotate((12 * Math.PI) / 180)
+      const xg = l.createLinearGradient(-width / 2, 0, width / 2, 0)
+      xg.addColorStop(0, 'rgba(255,255,255,0)')
+      xg.addColorStop(0.5, 'rgba(255,255,255,0.03)')
+      xg.addColorStop(1, 'rgba(255,255,255,0)')
+      l.fillStyle = xg
+      l.fillRect(-width / 2, 0, width, h * 1.3)
+      l.restore()
+    }
+    shaft(w * 0.2, w * 0.2)
+    shaft(w * 0.5, w * 0.1)
+    shaft(w * 0.76, w * 0.3)
+    l.globalCompositeOperation = 'destination-in'
+    const vf = l.createLinearGradient(0, 0, 0, h)
+    vf.addColorStop(0, 'rgba(0,0,0,1)')
+    vf.addColorStop(0.85, 'rgba(0,0,0,0)')
+    l.fillStyle = vf
+    l.fillRect(0, 0, w, h)
+    g.setTransform(1, 0, 0, 1, 0, 0)
+    g.globalCompositeOperation = 'lighter'
+    g.drawImage(L, 0, 0)
+    g.globalCompositeOperation = 'source-over'
+    sea = c
+    return c
+  }
 
   const spawnDust = (d?: Dust): Dust => {
-    const a = Math.random() * Math.PI * 2
-    const r = Math.max(stage.w, stage.h) * rand(0.35, 0.75)
+    const a = rnd() * Math.PI * 2
+    const r = Math.max(stage.w, stage.h) * (0.35 + rnd() * 0.4)
     const o = d ?? ({} as Dust)
     o.x = cx() + Math.cos(a) * r
     o.y = cy() + Math.sin(a) * r
     // gentle orbit
-    o.vx = -Math.sin(a) * rand(10, 40)
-    o.vy = Math.cos(a) * rand(10, 40)
-    o.hue = rand(170, 320)
-    o.s = rand(1, 3)
+    const sp = 10 + rnd() * 30
+    o.vx = -Math.sin(a) * sp
+    o.vy = Math.cos(a) * sp
+    o.hue = 190
+    o.s = 0.6 + rnd() * 1.0
+    const k = rnd()
+    o.col = k < 0.7 ? '#9FE8FF' : k < 0.9 ? '#D6F6FF' : '#7CFFCB'
+    o.px = o.x
+    o.py = o.y
     return o
   }
   for (let i = 0; i < 380; i++) dust.push(spawnDust())
@@ -197,6 +270,8 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
       const drag = Math.pow(holding ? 0.97 : 0.985, dt * 60)
       d.vx *= drag
       d.vy *= drag
+      d.px = d.x
+      d.py = d.y
       d.x += d.vx * dt
       d.y += d.vy * dt
       if (holding && dist < coreR) {
@@ -219,68 +294,40 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
   const draw = (now: number) => {
     const { ctx, w, h, dpr } = stage
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    // trails
-    ctx.fillStyle = 'rgba(5,5,14,0.32)'
-    ctx.fillRect(0, 0, w, h)
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.drawImage(bakeSea(), 0, 0)
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.save()
     shake.apply(ctx, w, h, now)
 
-    // dust
-    ctx.globalCompositeOperation = 'lighter'
+    // marine snow: round motes, each with a 1 px streak from where it was last frame
+    ctx.globalAlpha = 0.5
+    ctx.lineWidth = 1
     for (const d of dust) {
-      ctx.fillStyle = `hsla(${d.hue},90%,65%,0.8)`
-      const sp = Math.min(20, Math.hypot(d.vx, d.vy) * 0.02)
-      ctx.fillRect(d.x - d.s / 2, d.y - d.s / 2, d.s + sp * 0.3, d.s + sp * 0.3)
-    }
-    ctx.globalCompositeOperation = 'source-over'
-
-    // core
-    const x = cx() + (holding ? rand(-1, 1) * 10 * charge * charge : 0)
-    const y = cy() + (holding ? rand(-1, 1) * 10 * charge * charge : 0)
-    const base = minDim() * 0.07 * coreScale
-    const r = base * (1 + 0.35 * charge) + Math.sin(now * 0.004) * 2 * coreScale
-    const hot = charge
-    const hue = 200 - 200 * hot // cyan → red
-    const glowR = r * (3 + 3 * hot)
-    const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, glowR)
-    g.addColorStop(0, `hsla(${hue},100%,70%,0.9)`)
-    g.addColorStop(0.3, `hsla(${hue},100%,55%,0.35)`)
-    g.addColorStop(1, `hsla(${hue},100%,50%,0)`)
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.arc(x, y, glowR, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.globalCompositeOperation = 'source-over'
-    ctx.fillStyle = `hsl(${hue},100%,${80 + 15 * hot}%)`
-    ctx.beginPath()
-    ctx.arc(x, y, Math.max(0, r), 0, Math.PI * 2)
-    ctx.fill()
-    // charge arc
-    if (holding && charge > TAP_THRESHOLD) {
-      ctx.strokeStyle = `hsla(${hue},100%,70%,0.9)`
-      ctx.lineWidth = 4
+      ctx.fillStyle = d.col
       ctx.beginPath()
-      ctx.arc(x, y, r + 18, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * charge)
-      ctx.stroke()
-      // crackling arcs
-      ctx.lineWidth = 1.5
-      ctx.strokeStyle = `hsla(${hue + 40},100%,85%,${0.3 + 0.7 * charge})`
-      for (let k = 0; k < Math.round(1 + charge * 6); k++) {
-        let ax = x
-        let ay = y
-        const a = Math.random() * Math.PI * 2
+      ctx.arc(d.x, d.y, d.s, 0, Math.PI * 2)
+      ctx.fill()
+      const mx = d.x - d.px
+      const my = d.y - d.py
+      if (mx * mx + my * my > 4) {
+        ctx.strokeStyle = d.col
         ctx.beginPath()
-        ctx.moveTo(ax, ay)
-        const len = r * (1.5 + 2.5 * charge)
-        for (let s = 1; s <= 6; s++) {
-          ax = x + Math.cos(a) * (len * s) / 6 + rand(-8, 8)
-          ay = y + Math.sin(a) * (len * s) / 6 + rand(-8, 8)
-          ctx.lineTo(ax, ay)
-        }
+        ctx.moveTo(d.px, d.py)
+        ctx.lineTo(d.x, d.y)
         ctx.stroke()
       }
     }
+    ctx.globalAlpha = 1
+
+    // the fish
+    if (fixedPose === 'bald') poseBald(pose)
+    else if (fixedC !== null) poseFor(pose, fixedC, fixedC > 0, fish.delay)
+    else poseFor(pose, charge, holding, fish.delay)
+    pose.x = cx()
+    pose.y = cy()
+    pose.angerPulse = now * 0.001 * Math.PI * 2 * 4
+    fish.draw(ctx, pose, unit(), dpr, frozen ? 0 : now / 1000)
 
     // rings
     ctx.globalCompositeOperation = 'lighter'
@@ -324,7 +371,31 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
     flash.draw(ctx, w, h)
   }
 
+  let simNow = performance.now()
+  if (DEV) {
+    ;(window as unknown as Record<string, unknown>).__toy = {
+      seed,
+      ready: true,
+      freeze: () => (frozen = true),
+      resume: () => (frozen = false),
+      advance: (dt: number) => {
+        update(dt)
+        shake.update(dt)
+        flash.update(dt)
+        simNow += dt * 1000
+        draw(simNow)
+      },
+      U: () => unit(),
+      center: () => [cx(), cy()],
+    }
+  }
+
   const stopLoop = runLoop((dt, now) => {
+    if (frozen) {
+      draw(simNow)
+      return
+    }
+    simNow = now
     if (!stop.active) {
       update(dt)
       shake.update(dt)
