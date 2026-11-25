@@ -1,6 +1,6 @@
 import { audio, pentaFreq, type Riser } from './engine/AudioEngine'
 import { track } from './analytics'
-import { stats } from './share'
+import { peakEvery, stats } from './share'
 import { list, locale, t } from './i18n'
 import { Shake, haptic, runLoop, setupCanvas } from './engine/juice'
 import { Fish, GULPS, N_SPINES, newPose, poseBald, poseFor, rng, scaleForGulps } from './fish'
@@ -261,6 +261,8 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
     banner = { text: t('charge_blew'), t: 1, shadow: '#E8452C' }
     track('critical')
     stats.n = (stats.n ?? 0) + 1
+    // the share card's picture is read from the canvas when it is drawn (the burst)
+    peakEvery('charge', stats.n, { snap: null, data: { n: stats.n, p: stats.k ?? 0 } })
     // bald
     pose.s = 0.75
     sV = 0
@@ -294,6 +296,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
     shake.add(0.1)
     mode = 'pfft'
     modeT = 0
+    stats.k = (stats.k ?? 0) + 1 // pffts: the card's "lost it early" row
     if (firstPfft) {
       firstPfft = false
       track('pfft', { c10: Math.max(1, Math.min(4, Math.round(c * 10))) })

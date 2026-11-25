@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { MoreMenu } from './components/MoreMenu'
 import { applyMeta, t } from './i18n'
 import { startAnalytics, track } from './analytics'
-import { trackLanding } from './share'
+import { landing, trackLanding } from './share'
+import { Tag } from './components/Tag'
 import { Hint } from './components/Hint'
 import { startGame } from './game'
 
@@ -22,6 +23,7 @@ export default function App() {
     <>
       <canvas ref={ref} />
       <Hint text={t('hint_charge')} hidden={touched} />
+      {landing.recipient && <Tag text={t('charge_tag')} className="top-14" paper="bg-[#F4F7F8] text-[#1D2A30] font-medium" />}
       <MoreMenu current="charge" />
     </>
   )
