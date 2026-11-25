@@ -322,7 +322,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
 
     // the fish
     if (fixedPose === 'bald') poseBald(pose)
-    else if (fixedC !== null) poseFor(pose, fixedC, fixedC > 0, fish.delay)
+    else if (fixedC !== null) poseFor(pose, fixedC, fixedC > 0, fish.delay, q.get('lids') === 'wide')
     else poseFor(pose, charge, holding, fish.delay)
     pose.x = cx()
     pose.y = cy()
@@ -386,6 +386,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
         draw(simNow)
       },
       U: () => unit(),
+      spines: fish.spines.length,
       center: () => [cx(), cy()],
     }
   }

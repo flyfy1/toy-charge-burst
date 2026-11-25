@@ -108,7 +108,7 @@ export const gulpsAt = (c: number) => GULPS.filter((g) => c >= g).length
 export const scaleForGulps = (k: number) => 1 + 0.17 * k
 
 /** Static target pose for a charge (no springs, no time). `held` = finger is down. */
-export function poseFor(p: FishPose, c: number, held: boolean, spineDelay?: Float32Array) {
+export function poseFor(p: FishPose, c: number, held: boolean, spineDelay?: Float32Array, wideFurious = false) {
   p.s = scaleForGulps(gulpsAt(c))
   p.red = 0.45 * smoothstep(0.5, 1, c)
   p.blush = 0.6 * smoothstep(0.3, 0.95, c)
@@ -157,8 +157,8 @@ export function poseFor(p: FishPose, c: number, held: boolean, spineDelay?: Floa
     p.anger = 1
     p.sweat = 0
   } else {
-    p.lidOpen = 0.9
-    p.lidTilt = (30 * Math.PI) / 180
+    p.lidOpen = wideFurious ? 1 : 0.9
+    p.lidTilt = wideFurious ? 0 : (30 * Math.PI) / 180
     p.pupil = 0.3
     p.lookY = 0
     p.mouthFlat = 0.4
@@ -423,19 +423,22 @@ export class Fish {
       ctx.translate(side * rx * 0.9, 0.1 * ry)
       ctx.scale(side, 1)
       ctx.rotate(0.22 + a) // fan points outward and a little down
-      this.fan(ctx, 0.42 * Math.sqrt(p.s), 1.25, 5, lw)
+      this.fan(ctx, 0.42 * Math.sqrt(p.s), 1.25, 5, lw, p.red)
       ctx.restore()
     }
     // dorsal tuft on top
     ctx.save()
     ctx.translate(0.05 * rx, -ry * 0.93)
     ctx.rotate(-Math.PI / 2 + 0.12 + Math.sin(time * 2.2) * 0.12)
-    this.fan(ctx, 0.24 * Math.sqrt(p.s), 0.9, 4, lw)
+    this.fan(ctx, 0.24 * Math.sqrt(p.s), 0.9, 4, lw, p.red)
     ctx.restore()
   }
 
   /** A rounded fin fan pointing along +x from the origin. */
-  private fan(ctx: CanvasRenderingContext2D, L: number, spread: number, rays: number, lw: number) {
+  private fan(ctx: CanvasRenderingContext2D, L: number, spread: number, rays: number, lw: number, red: number) {
+    // same flush as the body: multiply by #E8452C at `red`
+    const m = (v: number, k: number) => Math.round(v * (1 - red + (red * k) / 255))
+    const C = (r: number, g: number, b: number, a: number) => `rgba(${m(r, 0xe8)},${m(g, 0x45)},${m(b, 0x2c)},${a})`
     const a0 = -spread / 2
     const step = spread / (rays - 1)
     ctx.beginPath()
@@ -455,14 +458,14 @@ export class Fish {
     }
     ctx.closePath()
     const g = ctx.createLinearGradient(0, 0, L, 0)
-    g.addColorStop(0, 'rgba(200,160,70,0.95)')
-    g.addColorStop(1, 'rgba(240,210,128,0.78)')
+    g.addColorStop(0, C(200, 160, 70, 0.95))
+    g.addColorStop(1, C(240, 210, 128, 0.78))
     ctx.fillStyle = g
     ctx.fill()
     ctx.strokeStyle = 'rgba(255,236,180,0.55)'
     ctx.lineWidth = 0.8 * lw
     ctx.stroke()
-    ctx.strokeStyle = 'rgba(184,146,60,0.9)'
+    ctx.strokeStyle = C(184, 146, 60, 0.9)
     ctx.lineWidth = 0.8 * lw
     ctx.lineCap = 'round'
     for (let i = 0; i < rays; i++) {
@@ -479,7 +482,7 @@ export class Fish {
     const base = 0.05
     for (let i = 0; i < this.spines.length; i++) {
       const s = this.spines[i]
-      const isRim = s.r > 0.8
+      const isRim = s.r > 0.95
       if (isRim !== rim) continue
       const on = p.spineOn[i]
       if (on <= 0.01) {
