@@ -144,19 +144,20 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
 
   const minDim = () => Math.min(stage.w, stage.h)
   // rest radius: the fish is ~45 % of the phone width at rest; on wide screens it follows the height
-  const unit = () => Math.min(stage.w * 0.2083, stage.h * 0.1)
+  const OG = q.get('og') === '1'
+  const unit = () => (OG ? stage.h * 0.15 : Math.min(stage.w * 0.2083, stage.h * 0.1))
   const homeX = () => stage.w / 2
-  const homeY = () => stage.h * 0.44
+  const homeY = () => stage.h * (OG ? 0.47 : 0.44)
   fx = homeX()
   fy = homeY()
 
   // ---------- marine snow ----------
-  const spawnMote = (m?: Mote, anywhere = true): Mote => {
+  const spawnMote = (m?: Mote): Mote => {
     const o = m ?? ({} as Mote)
     const U = unit()
     for (let k = 0; k < 8; k++) {
       o.x = rnd() * stage.w
-      o.y = anywhere ? rnd() * stage.h : rnd() < 0.5 ? -10 : rnd() * stage.h
+      o.y = rnd() * stage.h
       if (Math.hypot(o.x - fx, o.y - fy) > U * 2.4) break
     }
     o.vx = rr(-8, 8)
@@ -306,23 +307,27 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
     puffT = 0.3
     glareT = 0.6
     startleT = 0
-    audio.blip(pentaFreq(3, 330), 0.16)
-    haptic(12)
     if (firstPoke) {
       firstPoke = false
       track('poke')
     }
   }
 
-  const tapBurst = (x: number, y: number) => {
+  /** A quick tap. On the fish it is a poke (squash and glare); either way it counts toward the chain. */
+  const tapBurst = (x: number, y: number, onFish: boolean) => {
     combo = time - lastTap < 0.6 ? combo + 1 : 0
     lastTap = time
-    audio.blip(pentaFreq(combo % 15, 220), 0.3)
+    audio.blip(pentaFreq(combo % 15, 220), onFish ? 0.2 : 0.3)
     shake.maxPx = 34
-    shake.add(0.22 + Math.min(0.25, combo * 0.02))
-    haptic(18)
-    burst(x, y, 60 + combo * 4, 520 + combo * 25, 0.7, 2, 5)
-    ring(x, y, 700 + combo * 30, 0.35, 6, '#9FE8FF')
+    shake.add((onFish ? 0.12 : 0.22) + Math.min(0.25, combo * 0.02))
+    haptic(onFish ? 12 : 18)
+    if (onFish) {
+      poke()
+      burst(x, y, 12 + combo * 2, 260 + combo * 15, 0.6, 2, 4)
+    } else {
+      burst(x, y, 60 + combo * 4, 520 + combo * 25, 0.7, 2, 5)
+      ring(x, y, 700 + combo * 30, 0.35, 6, '#9FE8FF')
+    }
     if (combo > 0 && combo % 8 === 0) {
       stopT = 0.04
       audio.boom(0.5)
@@ -372,8 +377,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
         mode = 'idle'
         sTarget = 1
       }
-      if (!tapOnly && downOnFish) poke()
-      else tapBurst(px, py)
+      tapBurst(px, py, downOnFish && mode === 'idle')
       return
     }
     if (c < 0.5) startPfft(c)
@@ -643,7 +647,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
         d.vx += (sx / sd) * 9000 * dt
         d.vy += (sy / sd) * 9000 * dt
         if (sd < 0.1 * U) {
-          spawnMote(d, false)
+          spawnMote(d)
           continue
         }
       } else if (pull) {
@@ -661,7 +665,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
       d.py = d.y
       d.x += d.vx * dt
       d.y += d.vy * dt
-      if ((pull && dist < bodyR) || d.x < -60 || d.y < -60 || d.x > w + 60 || d.y > h + 60) spawnMote(d, false)
+      if ((pull && dist < bodyR) || d.x < -60 || d.y < -60 || d.x > w + 60 || d.y > h + 60) spawnMote(d)
     }
 
     // ---- bubbles

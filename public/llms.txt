@@ -1,14 +1,14 @@
 # Charge Burst
 
-> Hold to charge, release to detonate. Full in two seconds: screen shake, hit-stop, sub-bass and a screen full of sparks. A tiny stress-relief toy, no sign-up.
+> Hold to annoy a pufferfish. It gulps, swells and turns red. Let go early and it deflates with a raspberry; hold for two seconds and it blows its spines off. A tiny stress-relief toy, no sign-up.
 
 Charge Burst (蓄力核爆 (zh-CN), Carga Explosiva (es), Charge Explosive (fr), チャージバースト (ja)) is a free browser toy at https://charge.integ.life/ by Integ Life. It opens straight into play: no sign-up, no download, no ads, no tutorial. It works with a mouse or a touchscreen on phones, tablets and computers.
 
 ## How to play
 
-1. Press and hold anywhere on the screen. The energy core in the middle starts charging, pulls in the particles around it, shakes harder and harder and the screen edges turn red.
-2. Release to detonate. The longer you hold, the bigger the blast. At full charge (about 2.2 seconds) it goes CRITICAL: a short hit-stop freeze, a white flash, a sub-bass drop, a shockwave and hundreds of coloured sparks.
-3. Tap quickly instead of holding to fire small bursts wherever you tap. Each fast tap plays a higher note, and every 8th tap in a row sets off a bigger chain blast.
+1. Press and hold anywhere. The sleepy pufferfish wakes up and starts gulping water: five gulps, each one rounder, redder and angrier, with its spines bristling and an anger mark on its head.
+2. Let go to release it. Before half charge it deflates like a let-go balloon, zips around the screen blowing a raspberry and comes back unimpressed. After half charge it spits everything out in a burst of bubbles. Hold the full two seconds and it blows up: every spine flies off and sticks in the edges of the screen, and the bald fish grows them back one by one.
+3. Tap quickly instead of holding. Taps on the fish poke it (it squashes and glares at you); taps elsewhere make bubble bursts. Each fast tap plays a higher note, and every 8th tap in a row sets off a chain blast.
 
 ## Facts
 
