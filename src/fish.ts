@@ -378,9 +378,7 @@ export class Fish {
     const half = img.width / 2 / (U * dpr)
     ctx.save()
     ctx.scale(rx / bR, ry / bR)
-    if (p.sat < 1) ctx.filter = `saturate(${p.sat})`
     ctx.drawImage(img, -half, -half, half * 2, half * 2)
-    ctx.filter = 'none'
     ctx.restore()
     // body clip for overlays
     ctx.save()
@@ -400,6 +398,15 @@ export class Fish {
       ctx.globalCompositeOperation = 'multiply'
       ctx.globalAlpha = p.red
       ctx.fillStyle = '#E8452C'
+      ctx.fillRect(-rx, -ry, rx * 2, ry * 2)
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.globalAlpha = 1
+    }
+    if (p.sat < 0.995) {
+      // dazed and pale: a grey 'saturation' wash (much cheaper than ctx.filter)
+      ctx.globalCompositeOperation = 'saturation'
+      ctx.globalAlpha = 1 - p.sat
+      ctx.fillStyle = '#808080'
       ctx.fillRect(-rx, -ry, rx * 2, ry * 2)
       ctx.globalCompositeOperation = 'source-over'
       ctx.globalAlpha = 1
@@ -779,6 +786,36 @@ export class Fish {
     ctx.arc(-r * 0.35, -r * 0.2, r * 0.22, 0, Math.PI * 2)
     ctx.fill()
     ctx.restore()
+  }
+
+  /** World position of spine i's tip and its outward direction (ignores rot/stretch; used at full puff). */
+  spineWorld(p: FishPose, U: number, i: number): { x: number; y: number; dx: number; dy: number } {
+    const { rx, ry } = Fish.axes(p)
+    const s = this.spines[i]
+    const isRim = s.r > 0.95
+    const br = isRim ? Math.min(s.r, 0.93) : s.r
+    let dx = s.dx * rx
+    let dy = s.dy * ry
+    const dl = Math.hypot(dx, dy)
+    dx /= dl
+    dy /= dl
+    const len = (0.04 + 0.28 * p.spine[i]) * s.k * Math.pow(p.s, isRim ? 0.6 : 0.35)
+    const bx = (s.ux * (br / s.r) * rx + dx * len) * U * p.sqx
+    const by = (s.uy * (br / s.r) * ry + dy * len) * U * p.sqy
+    return { x: p.x + bx, y: p.y + by, dx, dy }
+  }
+
+  /** World position of the mouth. */
+  mouthWorld(p: FishPose, U: number): [number, number] {
+    const { ry } = Fish.axes(p)
+    const y = MOUTH_Y * ry * U * p.sqy
+    return [p.x - Math.sin(p.rot) * y, p.y + Math.cos(p.rot) * y]
+  }
+
+  /** Radius in css px that contains the body and fins (for keeping it on screen). */
+  extent(p: FishPose, U: number): { ex: number; ey: number } {
+    const { rx, ry } = Fish.axes(p)
+    return { ex: (rx * 0.9 + 0.42 * Math.sqrt(p.s) + 0.05) * U * p.sqx, ey: (ry + 0.25) * U * p.sqy }
   }
 
   /** Is (x, y) in css px inside the fish body? */

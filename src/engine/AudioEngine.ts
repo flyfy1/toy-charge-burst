@@ -197,6 +197,72 @@ class AudioEngine {
     }
   }
 
+  // ---------- pufferfish (this repo only; do not copy to the other toys) ----------
+
+  /** One gulp of water: a rising sine "glk" plus a short rubbery creak of stretching skin. */
+  gulp(k: number): void {
+    if (!this.ok) return
+    this.tone({ freq: 180, freqEnd: 320, type: 'sine', dur: 0.09, gain: 0.22, attack: 0.004 })
+    const ctx = this.ctx!
+    const t0 = ctx.currentTime
+    const o = ctx.createOscillator()
+    o.type = 'sawtooth'
+    o.frequency.setValueAtTime(420 + 25 * k, t0)
+    o.frequency.linearRampToValueAtTime(520 + 25 * k, t0 + 0.07)
+    const f = ctx.createBiquadFilter()
+    f.type = 'bandpass'
+    f.frequency.value = 1100
+    f.Q.value = 12
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(0.0001, t0)
+    g.gain.exponentialRampToValueAtTime(0.05, t0 + 0.008)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.07)
+    o.connect(f).connect(g).connect(this.master!)
+    o.start(t0)
+    o.stop(t0 + 0.09)
+  }
+
+  /** Let-go balloon: a low sawtooth chopped by a slowing square LFO, plus hiss. */
+  raspberry(c: number, dur: number): void {
+    if (!this.ok) return
+    const ctx = this.ctx!
+    const t0 = ctx.currentTime
+    const o = ctx.createOscillator()
+    o.type = 'sawtooth'
+    o.frequency.setValueAtTime(90, t0)
+    o.frequency.exponentialRampToValueAtTime(55, t0 + dur)
+    const lp = ctx.createBiquadFilter()
+    lp.type = 'lowpass'
+    lp.frequency.value = 900
+    const am = ctx.createGain()
+    am.gain.value = 0.5
+    const lfo = ctx.createOscillator()
+    lfo.type = 'square'
+    lfo.frequency.setValueAtTime(28, t0)
+    lfo.frequency.linearRampToValueAtTime(14, t0 + dur)
+    const lfoG = ctx.createGain()
+    lfoG.gain.value = 0.5
+    lfo.connect(lfoG).connect(am.gain)
+    const g = ctx.createGain()
+    const peak = 0.25 * (0.7 + 0.6 * c)
+    g.gain.setValueAtTime(0.0001, t0)
+    g.gain.exponentialRampToValueAtTime(peak, t0 + 0.015)
+    g.gain.setValueAtTime(peak, t0 + dur * 0.7)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
+    o.connect(lp).connect(am).connect(g).connect(this.master!)
+    o.start(t0)
+    lfo.start(t0)
+    o.stop(t0 + dur + 0.05)
+    lfo.stop(t0 + dur + 0.05)
+    this.noise({ dur, gain: 0.08, filter: 'highpass', freq: 2000, attack: 0.01 })
+  }
+
+  /** Tiny high tick: a needle landing or a spine growing back. Budgeted. */
+  tik(gain = 0.04): void {
+    if (!this.budget(8, 0.05)) return
+    this.tone({ freq: 2200 + Math.random() * 800, type: 'sine', dur: 0.015, gain, attack: 0.001 })
+  }
+
   whoosh(gain = 0.35): void {
     this.noise({ dur: 0.3, gain, filter: 'bandpass', freq: 400, freqEnd: 4000, q: 2, attack: 0.08 })
   }
@@ -208,7 +274,7 @@ class AudioEngine {
     const t0 = ctx.currentTime
     const out = ctx.createGain()
     out.gain.setValueAtTime(0.0001, t0)
-    out.gain.exponentialRampToValueAtTime(0.22, t0 + 0.05)
+    out.gain.exponentialRampToValueAtTime(0.1, t0 + 0.05) // quiet bed: the gulps carry the build
     const f = ctx.createBiquadFilter()
     f.type = 'lowpass'
     f.Q.value = 6
