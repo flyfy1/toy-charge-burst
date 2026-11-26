@@ -1,6 +1,6 @@
 import { audio, pentaFreq, type Riser } from './engine/AudioEngine'
 import { act, track } from './analytics'
-import { peakEvery, stats } from './share'
+import { offer, peakEvery, stats } from './share'
 import { list, locale, t } from './i18n'
 import { Shake, haptic, runLoop, setupCanvas } from './engine/juice'
 import { Fish, GULPS, N_SPINES, newPose, poseBald, poseFor, rng, scaleForGulps } from './fish'
@@ -137,6 +137,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
   let leakIn = 0
   let trailIn = 0
   let balded = 0
+  let baldUntil = -1
   let regrowOrder: number[] = []
   let baldLine = false
   // pfft flight
@@ -278,6 +279,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
     pose.sat = 0.85
     mode = 'bald'
     modeT = 0
+    baldUntil = time + 1.7 + 5
     balded = 0
     regrowOrder = Array.from({ length: N_SPINES }, (_, i) => i)
     for (let i = regrowOrder.length - 1; i > 0; i--) {
@@ -385,6 +387,8 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
       }
       if (counted) act(downOnFish && mode === 'idle' ? 'poke' : 'tap')
       tapBurst(px, py, downOnFish && mode === 'idle')
+      // the bald fish (a portal to knock): from the burst until 5 s after the last spine grew back (regrow ends at 1.7 s)
+      if (downOnFish && time < baldUntil) offer('charge', 'fish', () => [fx, fy - fish.extent(pose, unit()).ey])
       return
     }
     act('charge')
