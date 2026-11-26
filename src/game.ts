@@ -1,5 +1,5 @@
 import { audio, pentaFreq, type Riser } from './engine/AudioEngine'
-import { track } from './analytics'
+import { act, track } from './analytics'
 import { peakEvery, stats } from './share'
 import { list, locale, t } from './i18n'
 import { Shake, haptic, runLoop, setupCanvas } from './engine/juice'
@@ -260,6 +260,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
     blastMotes(1)
     banner = { text: t('charge_blew'), t: 1, shadow: '#E8452C' }
     track('critical')
+    act('blew')
     stats.n = (stats.n ?? 0) + 1
     // the share card's picture is read from the canvas when it is drawn (the burst)
     peakEvery('charge', stats.n, { snap: null, data: { n: stats.n, p: stats.k ?? 0 } })
@@ -376,13 +377,17 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void): () =>
     const c = charge
     charge = 0
     if (tapOnly || c < TAP_THRESHOLD) {
+      // not counted: letting go after the fish already blew in your hand
+      const counted = tapOnly || mode === 'hold'
       if (mode === 'hold') {
         mode = 'idle'
         sTarget = 1
       }
+      if (counted) act(downOnFish && mode === 'idle' ? 'poke' : 'tap')
       tapBurst(px, py, downOnFish && mode === 'idle')
       return
     }
+    act('charge')
     if (c < 0.5) startPfft(c)
     else blast(c)
   }
