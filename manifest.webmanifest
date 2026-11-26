@@ -1,0 +1,40 @@
+{
+  "name": "Charge Burst · integ.life",
+  "short_name": "Charge Burst",
+  "description": "Hold to annoy a pufferfish. It gulps, swells and turns red. Let go early and it deflates with a raspberry; hold for two seconds and it blows its spines off. A tiny stress-relief toy, no sign-up.",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#05050c",
+  "theme_color": "#05050c",
+  "categories": [
+    "games",
+    "entertainment",
+    "lifestyle"
+  ],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
